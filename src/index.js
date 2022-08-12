@@ -20,14 +20,5 @@ app.use(TaskRoutes)
 app.listen(port, ()=> {
 })
 
-    const jwt = require('jsonwebtoken')
-    const myFunction = async () => {
-        const token = jwt.sign({_id: 'abc123'},'ThisisMySecretToken', {expiresIn: '7 seconds'})
-        console.log(token)
-        const data = jwt.verify(token,'ThisisMySecretToken')
-        console.log(data)
-    }
-myFunction()
-
-
+ 
 
