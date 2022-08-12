@@ -39,7 +39,6 @@ router.get('/tasks/:id', async (req,res) => {
 })
 
 
-
 router.patch('/tasks/:id', async  (req,res) => {
 
     const updates = Object.keys(req.body)
@@ -49,7 +48,13 @@ router.patch('/tasks/:id', async  (req,res) => {
     return res.status(400).send('Err: invalid updating operation')
     
     try { 
-        const UpdatedTask = await Task.findByIdAndUpdate(req.params.id,req.body,{new:true,runValidators: true})
+        const UpdatedTask = await Task.findById(req.params.id)
+        updates.forEach((update) => {
+            UpdatedTask[update] = req.body[update]
+        })
+        await UpdatedTask.save()
+        
+      //  const UpdatedTask = await Task.findByIdAndUpdate(req.params.id,req.body,{new:true,runValidators: true})
         if(!UpdatedTask)
         return res.status(404).send()
         res.send(UpdatedTask)
