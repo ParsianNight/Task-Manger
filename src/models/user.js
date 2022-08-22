@@ -44,7 +44,10 @@ const userSchema = new mongoose.Schema({
             type: String,
             required: true
         } 
-    }]
+    }],
+    avatar: {
+        type: Buffer
+    }
 }, {timestamps:true})
 
 userSchema.virtual('tasks',{
@@ -70,9 +73,11 @@ userSchema.methods.toJSON =  function () {
     delete userObj.tokens
     delete userObj._id
     delete userObj.__v
+    delete userObj.avatar 
     return userObj
 }
- 
+
+
 userSchema.statics.findByCredentials = async (email,password) => {
     const user = await User.findOne({email})
     if(!user)
@@ -89,7 +94,7 @@ userSchema.statics.findByCredentials = async (email,password) => {
 userSchema.pre('save', async function (next) {
     const user = this
     if(user.isModified('password')) {
-        user.password =  bcrypt.hash(user.password,8)
+        user.password =  await bcrypt.hash(user.password,8)
     }
 
     next()

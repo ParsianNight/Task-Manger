@@ -2,6 +2,9 @@ const express = require('express')
 const User = require('../models/user')
 const auth = require('../middleware/auth')
 const router = new express.Router()
+const multer = require('multer')
+const sharp = require('sharp')
+const bcrypt = require('bcryptjs')
 
 router.post('/users', async (req,res) => {
     const user = new User(req.body)
@@ -16,8 +19,54 @@ router.post('/users', async (req,res) => {
 
 
 router.get('/users/me', auth ,async (req,res) => {
-    res.send(req.user)
-     
+    res.send(req.user)   
+})
+
+const upload = multer({
+    limits:1000000,
+    fileFilter (req,file,cb) {
+        if(!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+            return cb(new Error ('Please upload an image.'))
+        }
+        cb(undefined,true)
+    }
+})
+
+
+
+router.post('/users/avatar', auth, upload.single('avatar'), async (req,res) => {
+  try{
+    const buffer = await sharp(req.file.buffer).resize({width:250, height:250}).png().toBuffer()
+    req.user.avatar = buffer
+    await req.user.save()
+    res.status(201).send()
+  } catch (e) {
+    res.status(500).send("Error Man !")
+  }
+}, (error,req,res,next) => {
+    res.status(400).send({"Error":error.message})
+})
+
+router.delete('/users/avatar',auth, async (req,res) => {
+    req.user.avatar = undefined
+    await req.user.save()
+    res.status(200).send()
+})
+
+
+
+router.get('/users/:id/avatar', async (req,res) => {
+    try {
+    const user = await User.findById(req.params.id)
+    if (!user || !req.params.id){   
+        throw new Error()
+    }
+
+    res.set('Content-Type','image/png')
+    res.send(user.avatar)
+}  catch (e) {
+    res.status(404).send("Couldn't find image")
+    }
 })
 
 
@@ -26,7 +75,7 @@ router.patch('/users/me', auth ,async (req,res) => {
     const allowedUpdates = ['name','email','password','age']
     const isValidOperation = updates.every((update) =>  allowedUpdates.includes(update))
     if(!isValidOperation)
-    return res.status(400).send('Err: invalid updating operation')
+    return res.status(400).send('Err: invalid updating operation') 
 
     try { 
         updates.forEach((update) =>  req.user[update] =  req.body[update])
