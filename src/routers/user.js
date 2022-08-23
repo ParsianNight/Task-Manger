@@ -5,14 +5,18 @@ const router = new express.Router()
 const multer = require('multer')
 const sharp = require('sharp')
 const bcrypt = require('bcryptjs')
+const apiKey = "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"
+const emails = require('../emails/account.js')
 
 router.post('/users', async (req,res) => {
     const user = new User(req.body)
     try{
         await user.save()
         const token = await user.generateAuthToken()
+        emails.sendWelcomeMail(user.email, user.name)
         res.status(201).send({user ,token})
     } catch (e){
+
         res.status(500).send(e)
     }
 })
@@ -93,6 +97,7 @@ router.patch('/users/me', auth ,async (req,res) => {
 router.delete('/users/me', auth,async (req,res) => {
     try{
         await req.user.remove()
+        emails.sendByeMail(req.user.email, req.user.originalname)
         res.send(req.user)
     } catch (e){
         res.status(500).send(e)
