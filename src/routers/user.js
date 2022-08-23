@@ -5,7 +5,6 @@ const router = new express.Router()
 const multer = require('multer')
 const sharp = require('sharp')
 const bcrypt = require('bcryptjs')
-const apiKey = "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"
 const emails = require('../emails/account.js')
 
 router.post('/users', async (req,res) => {
